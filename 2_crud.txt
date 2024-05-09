@@ -1,0 +1,70 @@
+const express = require('express');
+const app = express();
+
+// get, post, put, patch, delete
+//  192.168.45.131:3000/ <=> localhost:3000/
+
+app.use(express.json());
+
+let users = [
+    {id: 1, name: "Mg Mg", age: 20},
+    {id: 2, name: "Ag Ag", age: 21},
+    {id: 3, name: "Tun Tun", age: 22},
+]
+
+app.get("/users", (req,res) => {
+    res.json(users);
+})
+
+app.get("/users/:id", (req, res) => {
+    let id = req.params.id;
+    let user = users.find(usr => usr.id == id);
+    if(user) {
+        res.json(user);
+    }else {
+        res.json({msg: " No user with that id sir!"});
+    }
+    console.log(user)
+})
+
+// user အသစ်ထည့်ခြင်း
+app.post("/user", (req, res)=> {
+    let id = req.body.id;
+    let name = req.body.name;
+    let age = req.body.age;
+    let newUser  = {
+        id:id,
+        name:name,
+        age:age
+    };
+    users.push(newUser);
+    res.json({users})
+})
+
+// user edit လုပ်ခြင်း
+app.patch("/user/:id", (req, res)=>{
+    let id = req.params.id;
+    let editUser = users.find(usr => usr.id == id);
+    if(editUser){
+        editUser.name = req.body.name;
+        editUser.age = req.body.age;
+        res.json(users);
+    }else{
+        res.json({msg: "No user with that is sir!"})
+    }
+});
+
+// delete လုပ်ခြင်း
+app.delete("/user/:id", (req,res)=> {
+    let id = req.params.id;
+    users = users.filter(usr => usr.id != id);
+    res.json(users);
+});
+
+app.get("*", (req,res)=> {
+    res.send({msg: "No Route Found"})
+})
+
+
+
+app.listen(3000, console.log("Server is running at port 3000"))
