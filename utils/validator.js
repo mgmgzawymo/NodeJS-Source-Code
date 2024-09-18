@@ -1,5 +1,7 @@
 const { validate } = require("../dbs/cat");
 const schema = require("./schema");
+const jwt = require('jsonwebtoken');
+const UserDB = require('../dbs/user');
 
 module.exports = {
     validateBody: (schema) => {
@@ -23,5 +25,24 @@ module.exports = {
                 next();
             }
         }
+    },
+    validateToken : async (req,res,next) => {
+        let token = req.headers.authorization;
+        if(token){
+        token = token.split(" ")[1];
+        let decoded = jwt.decode(token, process.env.SECRET_KEY);
+        let user = await UserDB.findById(decoded._id);
+        if(user){
+            req.body['user'] = user;
+            next();
+        }else{
+            next(new Error("Tokenization Error"));
+        }
+        
+        }else{
+            next(new Error("Tokenization Error"));
+        }
+        
+        
     }
 }

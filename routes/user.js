@@ -1,16 +1,16 @@
 const router = require('express').Router();
 
 const controller = require('../controllllers/user');
+const {Schema,RegisterSchema} = require('../utils/schema');// Schema တစ်ခုထည့်လိုက်ရင်ရပါပြီ
+const {validateBody} = require('../utils/validator');
 
 
-router.get("/", controller.all);
-router.post("/", controller.add);
+router.post("/", controller.login);
+router.post("/register", [validateBody(Schema.RegisterSchema),controller.register]);
 
 
-router.route("/:id")
-.get(controller.get)
-.patch(controller.patch)
-.delete(controller.drop)
+
+
 
 
 

@@ -1,57 +1,54 @@
 const DB = require('../dbs/user');
 const Helper = require('../utils/helper');
 
-const all = async(req,res,next)=>{
-    let users = await DB.find();
-    Helper.fMsg(res, "All Users", users);
 
-    // res.status(200).json({
-    //     con:true,
-    //     msg:"All Users",
-    //     result:[]
-    // });
-}
+const login = async(req,res, next)=>{
+    let phoneUser = await DB.findOne({phone:req.body.phone}).select("-__v");
+    if(phoneUser){
+        // console.log(req.body);
+        // console.log(phoneUser);
+        if( Helper.comparePass(req.body.password, phoneUser.password)) {
+            let user = phoneUser.toObject();
+            delete user.password;
+            user.token = Helper.makeToken(user);
+            Helper.fMsg(res, "Login Success", user);
 
-const add = async(req,res,next)=>{
-    let saveUser = new DB (req.body);
-    let result = await saveUser.save();
-    Helper.fMsg(res, "User Added", result);
-    // res.status(200).json({
-    //     con: true,
-    //     msg:"New Post",
-    //      result: req.body
-    // });
-}
+        }else{
+            next(new Error("Creditial Error"));
+        }
+        
+        
 
-const get = async(req,res,next)=>{
-    let id = req.params.id;
-    let user = await DB.findById(id);
-    Helper.fMsg(res, "Single User Get", user);
-    // res.json({msg: "Single User Get"});
-}
-
-const patch = async(req,res,next)=>{
-    let user =await DB.findById(req.params.id);
-    if(user) {
-        await DB.findByIdAndUpdate(user._id, req.body);
-        let retUser = await DB.findById(user._id);
-        Helper.fMsg(res, "User Updated", retUser);
-    }else {
-       next(new Error("Error, No user with that id")) // error ဖမ်းတာပါ
+    }else{
+        next( new Error("Creditial Error"));
     }
-    // res.json({msg:"Update user", result:req.body});
 }
 
-const drop = async(req,res,next)=>{
-    await DB.findByIdAndDelete(req.params.id);
-    Helper.fMsg(res, "User Deleted");
-    // res.json({msg:"Drop user", id : req.params.id});
+const register = async(req,res, next)=>{
+    let nameUser = await DB.findOne({name:req.body.name});
+    if(nameUser){
+        next(new Error("Name is already in use"));
+        return;
+    }
+
+    let emailUser = await DB.findOne({email:req.body.email});
+    if(emailUser) {
+        next(new Error("Email is already in use"));
+        return;
+    }
+
+    let phoneUser = await DB.findOne({phone:req.body.phone});
+    if(phoneUser) {
+        next(new Error("Phone is already in use"));
+        return;
+    }
+    req.body.password = Helper.encode(req.body.password);
+    
+    let result = await new DB(req.body).save();
+    Helper.fMsg(res, "Register Success", req.body);
 }
 
-module.exports  = {
-    all,
-    add,
-    get,
-    patch,
-    drop
+module.exports = {
+    login,
+    register
 }
